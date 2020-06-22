@@ -1,0 +1,16 @@
+[package]
+name = "windings"
+version = "0.1.0"
+authors = ["Erik Schulze <erikmail3333@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+winapi = { version = "0.3.8", features = ["winerror","windef","minwindef","unknwnbase","dxgi","winuser","dxgi1_2","dxgi1_3","dxgi1_4","dxgi1_5","dxgi1_6","dxgitype","dxgiformat","errhandlingapi","winbase","minwinbase"]}
+bitflags = "1.2.1"
+
+[features]
+default = ["dxgi"]
+unknown = []
+dxgi = ["unknown"]
