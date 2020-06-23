@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use std::ffi::{CString, OsStr, OsString};
-use crate::type_wrappers::conversion::{convert_c_to_os_wide_string, convert_bool};
+use crate::type_wrappers::type_conversion::{convert_c_to_os_wide_string, convert_bool};
 use std::convert::{TryInto, TryFrom};
 use bitflags::*;
 use std::error::Error;

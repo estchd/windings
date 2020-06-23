@@ -7,7 +7,7 @@ use bitflags::bitflags;
 use winapi::ctypes::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
-use crate::type_wrappers::conversion::convert_bool;
+use crate::type_wrappers::type_conversion::convert_bool;
 
 CONST_TO_ENUM!(const_enum N_CMD_SHOW,  winapi::ctypes::c_int {
     FORCEMINIMIZE = winapi::um::winuser::SW_FORCEMINIMIZE,

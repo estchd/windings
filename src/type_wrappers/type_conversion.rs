@@ -103,7 +103,7 @@ fn convert_c_string_to_normal_string(value: CString) -> String {
 #[cfg(test)]
 mod test_convert_c_string_to_normal_string {
     use std::ffi::CString;
-    use crate::type_wrappers::conversion::{convert_c_string_to_normal_string};
+    use crate::type_wrappers::type_conversion::{convert_c_string_to_normal_string};
 
     /// Tests that the Converted String is Null-Terminated
     #[test]
@@ -121,7 +121,7 @@ mod test_convert_c_string_to_normal_string {
 #[cfg(test)]
 mod test_c_string_to_wide_string {
     use std::ffi::CString;
-    use crate::type_wrappers::conversion::convert_c_to_os_wide_string;
+    use crate::type_wrappers::type_conversion::convert_c_to_os_wide_string;
 
     /// Tests that the Converted String is Null-Terminated
     #[test]

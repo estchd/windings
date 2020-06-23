@@ -9,7 +9,7 @@
 
 /// Functions and Macros used to convert Types between C FFI and Rust
 #[macro_use]
-pub mod conversion;
+pub mod type_conversion;
 
 pub mod window;
 pub mod window_class;
