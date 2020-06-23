@@ -1,65 +1,28 @@
-#![allow(non_snake_case,dead_code)]
+//! # Windings
+//!
+//! ## THIS CRATE IS HIGHLY UNSTABLE AND NOT MEANT FOR PRODUCTION CODE
+//!
+//! The Windings Crate aims to provide a safe wrapper for the Win32 API.
+//!
+//! Please note, that because of the safe wrapping of the API, Crate Functions and Modules may not map 1:1 to API Functions or Headers.
+//! This shall be indicated in the Documentation of said Functions and Modules.
+//!
+//! Please also note, that because of the safe wrapping, some functions may not work exactly the same as API Functions.
+//! This shall be avoided if at all possible and if necessary indicated in the Documentation
+//!
+//! As a final note, due to how things like FFI Callbacks may be wrapped, it may be necessary to use the Win32 API in ways that, if modified by an external library may lead to UB or worse.
+//! This shall be indicated as well as avoided at all costs.
+
+
+/// Wrapper Functions on top of WINAPI that convert Rust Types into FFI Types
 #[macro_use]
 mod type_wrappers;
 
-use std::panic::catch_unwind;
+/// The Actual Safe Wrappers for the Win32 API on top of the Type Wrappers
+mod safe_wrappers;
 
-#[cfg(feature = "dxgi")]
-pub mod dxgi;
+// Module Re-Exports
+pub use safe_wrappers::unknown;
+pub use safe_wrappers::dxgi;
 
-#[cfg(feature = "unknown")]
-pub mod unknown;
-
-
-#[cfg(test)]
-mod tests {
-    use crate::{create_window};
-
-    #[test]
-    fn it_works() {
-        create_window(|| {println!("Hello There");})
-    }
-}
-
-use winapi::shared::windef::{HWND, HCURSOR, HICON, HBRUSH};
-use winapi::shared::minwindef::{UINT, WPARAM, LPARAM, BOOL, HINSTANCE};
-use winapi::um::winuser::{LPMSG, MSG};
-use std::ffi::{CString};
-use std::mem::MaybeUninit;
-use crate::type_wrappers::window_class::{ClassStyle, WindowClassExA};
-
-struct Window {
-    wnd_proc: fn(window: HWND, msg: UINT, wparam: WPARAM, lparam: LPARAM),
-
-}
-
-type SafeCallback = fn(HWND, UINT, WPARAM, LPARAM);
-
-unsafe extern "system" fn unsafe_wnd_proc(window: HWND, msg: UINT, wparam: WPARAM, lparam: LPARAM) {
-    if let Err(e) = catch_unwind(|| {
-    }) {
-        // Code here must be panic-free.
-        // Sane things to do:
-        // log failure and/or kill the program
-        eprintln!("{:?}", e);
-    }
-}
-
-fn create_window(window_procedure: fn())
-{
-    let proc_ptr = window_procedure as isize;
-    println!("{}", proc_ptr);
-    let proc: fn();
-    unsafe {
-        proc = std::mem::transmute::<isize,fn()>(proc_ptr);
-    }
-    proc();
-}
-
-fn SafeCallback_to_isize(ptr: *mut isize) -> isize {
-    return ptr as isize;
-}
-
-fn isize_to_ptr(val: isize) -> * mut isize {
-    return val as *mut isize
-}
+pub use safe_wrappers::error_handling_api;

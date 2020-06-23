@@ -1,7 +1,18 @@
+//! # Conversion
+//!
+//! This Module Contains functions and Macros to make Conversions between C FFI Types and Rust Types easier
+
 use winapi::shared::minwindef::BOOL;
 use std::ffi::{OsString, CString};
 use std::os::windows::prelude::*;
 
+/// Converts C Constant Based Enums into Rust Enums
+///
+/// The Resulting Enum Supports the Into Trait into the original Type as well as TryFrom the original Type
+///
+/// TryFrom is needed because C APIs may return non-specified Values
+
+// TODO: Implement a Macro for Enums with a Default value instead of a TryFrom
 #[macro_export]
 macro_rules! CONST_TO_ENUM {
     {const_enum $name:ident, $original:path {$($new:ident = $old:path,)*}} =>
@@ -42,41 +53,79 @@ macro_rules! CONST_TO_ENUM {
     }
 }
 
+/// Converts C Style BOOLs to Rust booleans.
+///
+/// # Arguments
+///
+/// * `value` - The C Style BOOL that should be converted
+///
+/// # Return
+///
+/// This Function returns true for a non-zero value and false for a zero value
 #[inline]
 pub fn convert_bool(value: BOOL) -> bool {
     return value != 0;
 }
 
+/// Converts CStrings to Windows Null-Terminated WideStrings
+///
+/// # Arguments
+///
+/// * `value`- The CString that should be converted
+
+// TODO: Make this Conversion better
 #[inline]
 pub fn convert_c_to_os_wide_string(value: CString) -> Vec<u16> {
-    //This Conversion seems horribly inefficient but at the same time it seems to be the only way to do this
-    //TODO: Make this Conversion better
+    // This Conversion seems horribly inefficient but at the same time it seems to be the only way to do this
+    // It seems to be the only way to do this since i have not found a way to directly convert between CString and OSString and Rust Strings can contain inner Null Chars
     let normal_string = convert_c_string_to_normal_string(value);
+
+    // The Resulting OSString (and with that also the resulting Vector) should be Null-Terminated if the converted string is Null Terminated
     let os_string = OsString::from(normal_string);
     return os_string.encode_wide().collect();
 }
 
+/// Converts CStrings into a Null-Terminated Rust String
+///
+/// # Arguments
+///
+/// * `value` - The CString that should be converted
+
+// TODO: Make this Conversion better or remove the need for this function
 #[inline]
 fn convert_c_string_to_normal_string(value: CString) -> String {
-    //TODO: Make this Conversion better
+    // This Conversion should always work since CStrings are already valid UTF-8 Strings
+    // The only thing to Test is that the Resulting String is also Null-Terminated (luckily the String Constructor doesn't remove Null Chars so this works)
     return String::from_utf8(Vec::from(value.as_bytes_with_nul())).expect("Error while Converting CString");
 }
 
+/// Tests for the convert_c_string_to_normal_string Function
 #[cfg(test)]
-mod test {
+mod test_convert_c_string_to_normal_string {
     use std::ffi::CString;
-    use crate::type_wrappers::conversion::{convert_c_string_to_normal_string, convert_c_to_os_wide_string};
+    use crate::type_wrappers::conversion::{convert_c_string_to_normal_string};
 
+    /// Tests that the Converted String is Null-Terminated
     #[test]
-    fn test_c_string_to_normal_string_ends_with_null() {
+    fn test_result_is_null_terminated() {
         let c_string = CString::new("Hello World").expect("Error while Creating CString");
         let string = convert_c_string_to_normal_string(c_string);
 
         assert!(string.ends_with("\0"));
     }
 
+
+}
+
+/// Tests for the convert_c_string_to_wide_string Function
+#[cfg(test)]
+mod test_c_string_to_wide_string {
+    use std::ffi::CString;
+    use crate::type_wrappers::conversion::convert_c_to_os_wide_string;
+
+    /// Tests that the Converted String is Null-Terminated
     #[test]
-    fn test_c_string_to_wide_string_ends_with_null() {
+    fn test_result_is_null_terminated() {
         let c_string = CString::new("Hello World").expect("Error while Creating CString");
         let wide_string = convert_c_to_os_wide_string(c_string);
 
