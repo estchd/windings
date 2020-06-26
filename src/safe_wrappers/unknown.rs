@@ -1,5 +1,5 @@
 #![cfg(feature = "unknown")]
-#![allow(non_snake_case)]
+#![allow(non_snake_case, dead_code)]
 use winapi::shared::winerror::HRESULT;
 use winapi::_core::ptr::{null_mut};
 

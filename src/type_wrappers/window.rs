@@ -1,4 +1,4 @@
-#![allow(non_snake_case,non_camel_case_types)]
+#![allow(non_snake_case,non_camel_case_types, dead_code)]
 use std::mem::MaybeUninit;
 use winapi::um::winuser::{LPMSG, MSG};
 use winapi::shared::minwindef::{BOOL, LRESULT, DWORD, LPVOID, HINSTANCE};
@@ -7,7 +7,7 @@ use bitflags::bitflags;
 use winapi::ctypes::c_int;
 use std::ffi::CString;
 use std::ptr::null_mut;
-use crate::type_wrappers::type_conversion::convert_bool;
+use crate::type_wrappers::type_conversion::convert_c_bool;
 
 CONST_TO_ENUM!(const_enum N_CMD_SHOW,  winapi::ctypes::c_int {
     FORCEMINIMIZE = winapi::um::winuser::SW_FORCEMINIMIZE,
@@ -99,7 +99,7 @@ pub fn GetMessageA(h_wnd: HWND, msg_filter_min: u32, msg_filter_max: u32) -> (bo
         value = winapi::um::winuser::GetMessageA(lp_msg, h_wnd, msg_filter_min, msg_filter_max);
         msg = uninit_msg.assume_init();
     }
-    return (convert_bool(value), msg);
+    return (convert_c_bool(value), msg);
 }
 
 #[inline]
@@ -113,7 +113,7 @@ pub fn GetMessageW(h_wnd: HWND, msg_filter_min: u32, msg_filter_max: u32) -> (bo
         value = winapi::um::winuser::GetMessageW(lp_msg, h_wnd, msg_filter_min, msg_filter_max);
         msg = uninit_msg.assume_init();
     }
-    return (convert_bool(value), msg);
+    return (convert_c_bool(value), msg);
 }
 
 #[inline]
@@ -123,7 +123,7 @@ pub fn TranslateMessage(msg: &MSG) -> bool {
     unsafe {
         value = winapi::um::winuser::TranslateMessage(msg_ptr);
     }
-    return convert_bool(value);
+    return convert_c_bool(value);
 }
 
 #[inline]
@@ -153,7 +153,7 @@ pub fn ShowWindow(h_wnd: HWND, n_cmd_show: N_CMD_SHOW) -> bool {
     unsafe {
         value = winapi::um::winuser::ShowWindow(h_wnd,n_cmd_show);
     }
-    return convert_bool(value);
+    return convert_c_bool(value);
 }
 
 #[inline]
@@ -163,7 +163,7 @@ pub fn ShowWindowAsync(h_wnd: HWND, n_cmd_show: N_CMD_SHOW) -> bool {
     unsafe {
         value = winapi::um::winuser::ShowWindowAsync(h_wnd,n_cmd_show);
     }
-    return convert_bool(value);
+    return convert_c_bool(value);
 }
 
 pub fn CreateWindowExA(

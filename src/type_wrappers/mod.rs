@@ -16,3 +16,9 @@ pub mod window_class;
 
 /// Type Wrappers for the errhandlingapi.h Header
 pub mod error_handling_api;
+
+/// Type Wrappers for the errorrep.h Header
+pub mod error_report;
+
+/// Type Wrappers for the werapi.h Header
+pub mod wer_api;

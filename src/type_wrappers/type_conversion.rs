@@ -5,6 +5,8 @@
 use winapi::shared::minwindef::BOOL;
 use std::ffi::{OsString, CString};
 use std::os::windows::prelude::*;
+use winapi::um::winnt::PVOID;
+use winapi::ctypes::c_void;
 
 /// Converts C Constant Based Enums into Rust Enums
 ///
@@ -63,8 +65,25 @@ macro_rules! CONST_TO_ENUM {
 ///
 /// This Function returns true for a non-zero value and false for a zero value
 #[inline]
-pub fn convert_bool(value: BOOL) -> bool {
+pub fn convert_c_bool(value: BOOL) -> bool {
     return value != 0;
+}
+
+/// Converts Rust Style booleans to C BOOLs.
+///
+/// # Arguments
+///
+/// * `value` - The Rust Style bool that should be converted
+///
+/// # Return
+///
+/// This Function returns 1 for a true value and 0 for a false value
+#[inline]
+pub fn convert_rust_bool(value: bool) -> BOOL {
+    return match value {
+        true => 1,
+        false => 0
+    };
 }
 
 /// Converts CStrings to Windows Null-Terminated WideStrings
@@ -97,6 +116,16 @@ fn convert_c_string_to_normal_string(value: CString) -> String {
     // This Conversion should always work since CStrings are already valid UTF-8 Strings
     // The only thing to Test is that the Resulting String is also Null-Terminated (luckily the String Constructor doesn't remove Null Chars so this works)
     return String::from_utf8(Vec::from(value.as_bytes_with_nul())).expect("Error while Converting CString");
+}
+
+/// Converts References into void Pointers
+///
+/// # Arguments
+///
+/// * `reference` - The reference that should be converted
+#[inline]
+pub fn convert_reference_to_pvoid<T>(reference: &mut T) -> PVOID {
+    return (reference as *mut T) as PVOID;
 }
 
 /// Tests for the convert_c_string_to_normal_string Function

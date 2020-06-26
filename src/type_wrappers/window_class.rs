@@ -1,3 +1,5 @@
+#![allow(non_snake_case, dead_code)]
+
 use bitflags::bitflags;
 use winapi::shared::minwindef::{UINT, WPARAM, LPARAM, HINSTANCE, LRESULT};
 use winapi::shared::windef::{HCURSOR, HWND, HICON, HBRUSH};
