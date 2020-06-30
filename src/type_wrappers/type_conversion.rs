@@ -8,6 +8,7 @@ use std::os::windows::prelude::*;
 use winapi::um::winnt::PVOID;
 use winapi::ctypes::c_void;
 
+
 /// Converts C Constant Based Enums into Rust Enums
 ///
 /// The Resulting Enum Supports the Into Trait into the original Type as well as TryFrom the original Type
@@ -160,4 +161,122 @@ mod test_c_string_to_wide_string {
 
         assert!(wide_string.ends_with(&[0u16]));
     }
+}
+
+// TODO: Document this
+macro_rules! type_conversion {
+    ($arg_name:ident, bool, BOOL) => (crate::type_wrappers::type_conversion::convert_rust_bool($arg_name));
+    ($arg_name:ident, BOOL, bool) => (crate::type_wrappers::type_conversion::convert_c_bool($arg_name));
+}
+
+// TODO: Document this
+macro_rules! tuple_combine_three {
+    ((),(),()) => (());
+    (($($tuple_1_member:tt)+),(),()) => (($($tuple_1_member),+));
+    (($($tuple_1_member:tt),*),($($tuple_2_member:tt),+),()) => (($($tuple_1_member,)* $($tuple_2_member),+));
+    (($($tuple_1_member:tt),*),($($tuple_2_member:tt),*),($($tuple_3_member:tt),+)) => (($($tuple_1_member,)* $($tuple_2_member,)* $($tuple_3_member),+));
+}
+
+// TODO: DOCUMENT THIS!!!!
+#[macro_export]
+macro_rules! wrap_ffi_function {
+    (
+        $(#[$outer:meta])*
+        $fn_vis:vis fn $function_name:ident($($arg:ident: $argtype:ty),*)
+        FFI fn $ffi_function_name:path;
+        FFI args($($ffi_arg:ident),*) -> $ffi_return:ty;
+
+        $(IN:
+            $(PASS $pass_in_arg_name:ident => $pass_in_ffi_arg_name:ident)*
+            $(AUTO $auto_in_arg_name:ident => $auto_in_ffi_arg_name:ident : $auto_in_arg_type:ident => $auto_in_arg_ffi_type:ident)*
+            $(CUSTOM $custom_in_arg_name:ident: $custom_in_arg_ffi_type:ty = $custom_in_convert:block)*
+        )?
+
+        $(OUT:
+            $(PASS $pass_out_ffi_uninit_name:ident, $pass_out_ffi_arg_name:ident: $pass_out_type:ident)*
+            $(AUTO $auto_out_ffi_uninit_name:ident, $auto_out_ffi_arg_name:ident: $auto_out_ffi_type:ident => $auto_out_arg_type:ident)*
+            $(CUSTOM $custom_out_ffi_uninit_name:ident, $custom_out_ffi_arg_name:ident: $custom_out_type:ty = $custom_out_convert:block)*
+        )?
+
+        RETURN:
+            OK VALUE: $ok_value:path
+    ) =>
+    (
+        $(#[$outer])*
+        #[inline]
+        $fn_vis fn $function_name($($arg:$argtype),*) -> std::result::Result<(),$ffi_return> {
+            let result: $ffi_return;
+            $(
+                $(let $pass_in_ffi_arg_name = $pass_in_arg_name;)*
+                $(let $auto_in_ffi_arg_name: $auto_in_arg_ffi_type = type_conversion!($auto_in_arg_name, $auto_in_arg_type, $auto_in_arg_ffi_type);)*
+                $(let $custom_in_arg_name: $custom_in_arg_ffi_type = $custom_in_convert;)*
+            )?
+
+            $(
+                $(
+                    let mut $pass_out_ffi_uninit_name = std::mem::MaybeUninit::<$pass_out_type>::uninit();
+                    let $pass_out_ffi_arg_name = (&mut $pass_out_ffi_uninit_name).as_mut_ptr();
+                )*
+                $(
+                    let mut $auto_out_ffi_uninit_name = std::mem::MaybeUninit::<$auto_out_ffi_type>::uninit();
+                    let $auto_out_ffi_arg_name = (&mut $auto_out_ffi_uninit_name).as_mut_ptr();
+                )*
+                $(
+                    let mut $custom_out_ffi_uninit_name = std::mem::MaybeUninit::<$custom_out_type>::uninit();
+                    let $custom_out_ffi_arg_name = (&mut $custom_out_ffi_uninit_name).as_mut_ptr();
+                )*
+            )?
+            unsafe {
+                result = $ffi_function_name($($ffi_arg),*);
+            }
+
+            return match result {
+                $ok_value => {
+                    $(
+                        $(let $pass_out_ffi_arg_name = unsafe { $pass_out_ffi_uninit_name.assume_init() };)*
+                        $(let $auto_out_ffi_arg_name = unsafe { $auto_out_ffi_uninit_name.assume_init() };)*
+                        $(let $custom_out_ffi_arg_name = unsafe { $custom_out_ffi_uninit_name.assume_init() };)*
+
+                        $(let $auto_out_ffi_arg_name = type_conversion!($auto_out_ffi_arg_name, $auto_out_ffi_type, $auto_out_arg_type);)*
+                        $(let $custom_out_ffi_arg_name = $custom_out_convert;)*
+                    )?
+
+                    let results = tuple_combine_three!(($($($pass_out_ffi_arg_name),*)?),($($($auto_out_ffi_arg_name),*)?),($($($custom_out_ffi_arg_name),*)?));
+                    Ok(results)
+                }
+                _ => Err(result)
+            }
+        }
+    );
+}
+
+// TODO: DOCUMENT THIS!!!!
+#[macro_export]
+macro_rules! wrap_noreturn_ffi_function {
+    (
+        $(#[$outer:meta])*
+        $fn_vis:vis fn $function_name:ident($($arg:ident: $argtype:ty),*)
+        FFI fn $ffi_function_name:path;
+        FFI args($($ffi_arg:ident),*);
+
+        $(IN:
+            $(PASS $pass_in_arg_name:ident => $pass_in_ffi_arg_name:ident)*
+            $(AUTO $auto_in_arg_name:ident => $auto_in_ffi_arg_name:ident : $auto_in_arg_type:ident => $auto_in_arg_ffi_type:ident)*
+            $(CUSTOM $custom_in_arg_name:ident: $custom_in_arg_ffi_type:ty = $custom_in_convert:block)*
+        )?
+    ) =>
+    (
+        $(#[$outer])*
+        #[inline]
+        $fn_vis fn $function_name($($arg:$argtype),*) {
+            $(
+                $(let $pass_in_ffi_arg_name = $pass_in_arg_name;)*
+                $(let $auto_in_ffi_arg_name: $auto_in_arg_ffi_type = type_conversion!($auto_in_arg_name, $auto_in_arg_type, $auto_in_arg_ffi_type);)*
+                $(let $custom_in_arg_name: $custom_in_arg_ffi_type = $custom_in_convert;)*
+            )?
+            unsafe {
+                $ffi_function_name($($ffi_arg),*);
+            }
+        }
+    );
 }
