@@ -22,7 +22,7 @@ wrap_noreturn_ffi_function!(
     FFI args(recovery_success_ffi);
 
     IN:
-        AUTO recovery_success => recove ry_success_ffi: bool => BOOL
+        AUTO recovery_success => recovery_success_ffi: bool => BOOL
 );
 
 // This Function is already Safe
@@ -53,11 +53,6 @@ pub fn GetApplicationRecoveryCallback() {
 pub fn RegisterApplicationRecoveryCallback() {
     unimplemented!();
 }
-
-wrap_ffi_function!(
-    pub fn RegisterApplicationRecoveryCallback<T>(callback: i32, parameter: Option<&T>, pingInterval: u32, flags: u32)
-
-);
 
 // TODO: Document this
 wrap_ffi_function!(
