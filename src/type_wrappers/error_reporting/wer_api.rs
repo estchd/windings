@@ -1,8 +1,11 @@
-//! # Werapi.h
+//! # Werapi
 //!
-//! This module provides Type Wrapping for Functions in the werapi.h Header
+//! Type Wrappers for the werapi.h Header
 //!
-//! Sadly, much of werapi.h does not have FFI Bindings in WINAPI yet, so this module will remain incomplete for now
+//! Sadly, Bindings for this Header are incomplete in WINAPI.
+//! This means, that this will remain incomplete for now.
+//!
+//! Link to the Header Documentation [here](https://docs.microsoft.com/en-us/windows/win32/api/werapi/)
 
 #![allow(non_snake_case, dead_code)]
 
